@@ -7,10 +7,10 @@ interface OutcomePrice {
   price: number;
 }
 
-interface Market {
-  id: string;
-  outcomes: string[];
-  outcomePrices: OutcomePrice[];
+interface Scenario {
+  question: string;
+  endDate: string;
+  volume: number;
 }
 
 interface EventCardProps {
@@ -21,6 +21,31 @@ interface EventCardProps {
   active: boolean;
   outcomes: string[];
   outcomePrices: OutcomePrice[];
+  startDate: string;
+  endDate: string;
+  volume: number;
+  liquidity: number;
+  commentCount: number;
+  image?: string;
+  scenarios: Scenario[];
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toFixed(2);
 }
 
 export default function EventCard({
@@ -31,74 +56,141 @@ export default function EventCard({
   active,
   outcomes,
   outcomePrices,
+  startDate,
+  endDate,
+  volume,
+  liquidity,
+  commentCount,
+  image,
+  scenarios,
 }: EventCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-900 flex-1">{title}</h3>
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
-            active
-              ? 'bg-green-100 text-green-800'
-              : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-          {active ? 'Active' : 'Inactive'}
-        </span>
-      </div>
-
-      {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {tags.map((tag, idx) => (
-          <span
-            key={idx}
-            className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium"
-          >
-            {tag.label}
-          </span>
-        ))}
-      </div>
-
-      {/* Description */}
-      {description && (
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {description}
-        </p>
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      {image && (
+        <div className="relative h-40 bg-gray-200 overflow-hidden">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
       )}
 
-      {/* Outcomes and Prices */}
-      <div className="mt-4">
-        <h4 className="font-semibold text-gray-700 mb-3">Outcomes & Prices</h4>
-        <div className="space-y-2">
-          {outcomePrices && Array.isArray(outcomePrices) && outcomePrices.length > 0 ? (
-            outcomePrices.map((item: OutcomePrice, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between bg-gray-50 p-2 rounded"
-              >
-                <span className="text-gray-700 text-sm truncate">
-                  {item.outcome || `Outcome ${idx + 1}`}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div className="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{
-                        width: `${Math.max(0, Math.min(100, (item.price || 0) * 100))}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <span className="text-blue-600 font-semibold text-sm w-12 text-right">
-                    {((item.price || 0) * 100).toFixed(1)}%
-                  </span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-sm">No price data available</p>
-          )}
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="text-lg font-bold text-gray-900 flex-1 pr-2">{title}</h3>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+              active
+                ? 'bg-green-100 text-green-800'
+                : 'bg-gray-100 text-gray-800'
+            }`}
+          >
+            {active ? 'Activo' : 'Inactivo'}
+          </span>
         </div>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags.map((tag, idx) => (
+            <span
+              key={idx}
+              className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium"
+            >
+              {tag.label}
+            </span>
+          ))}
+        </div>
+
+        {description && (
+          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+            {description}
+          </p>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+          <div className="bg-blue-50 p-3 rounded">
+            <p className="text-gray-600 text-xs font-semibold">Lanzamiento</p>
+            <p className="text-gray-900 font-medium">{formatDate(startDate)}</p>
+          </div>
+          <div className="bg-red-50 p-3 rounded">
+            <p className="text-gray-600 text-xs font-semibold">Cierre</p>
+            <p className="text-gray-900 font-medium">{formatDate(endDate)}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 mb-4 text-sm">
+          <div className="bg-gray-50 p-2 rounded text-center">
+            <p className="text-gray-600 text-xs">Volumen</p>
+            <p className="font-semibold text-gray-900">${formatNumber(volume)}</p>
+          </div>
+          <div className="bg-gray-50 p-2 rounded text-center">
+            <p className="text-gray-600 text-xs">Liquidez</p>
+            <p className="font-semibold text-gray-900">${formatNumber(liquidity)}</p>
+          </div>
+          <div className="bg-gray-50 p-2 rounded text-center">
+            <p className="text-gray-600 text-xs">Comentarios</p>
+            <p className="font-semibold text-gray-900">{commentCount}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 mb-4">
+          <h4 className="font-semibold text-gray-700 mb-3">Probabilidades</h4>
+          <div className="space-y-2">
+            {outcomePrices && Array.isArray(outcomePrices) && outcomePrices.length > 0 ? (
+              outcomePrices.map((item: OutcomePrice, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                >
+                  <span className="text-gray-700 text-sm truncate">
+                    {item.outcome || `Outcome ${idx + 1}`}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, (item.price || 0) * 100))}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-blue-600 font-semibold text-sm w-12 text-right">
+                      {((item.price || 0) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No hay datos disponibles</p>
+            )}
+          </div>
+        </div>
+
+        {scenarios && scenarios.length > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <h4 className="font-semibold text-gray-700 mb-3">Escenarios Activos ({scenarios.length})</h4>
+            <div className="space-y-2">
+              {scenarios.map((scenario, idx) => (
+                <div key={idx} className="bg-gray-50 p-2 rounded text-sm">
+                  <p className="text-gray-900 font-medium truncate">
+                    {scenario.question}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-gray-600 text-xs">
+                      Cierre: {formatDate(scenario.endDate)}
+                    </p>
+                    <p className="text-gray-600 text-xs">
+                      Vol: ${formatNumber(parseFloat(scenario.volume as any))}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
