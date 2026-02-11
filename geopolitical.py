@@ -12,8 +12,7 @@ response = r.json()
 results = []
 
 # Tags to filter by
-geopolitical_tags = ['trump']
-
+geopolitical_tags = ['geopolitics']
 for event in response:
     if 'tags' in event:
         event_tags = [tag.get('slug') for tag in event.get('tags', [])]
