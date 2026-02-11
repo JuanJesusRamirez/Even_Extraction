@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import os
+import httpx
 from pathlib import Path
+from urllib.parse import urlencode
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -135,6 +137,49 @@ async def get_all_tags():
         "success": True,
         "tags": sorted(list(tags_dict.keys())),
         "data": sorted(list(tags_dict.keys()))
+    }
+
+POLYMARKET_API = "https://gamma-api.polymarket.com/public-search"
+
+@app.get("/api/search")
+async def search_polymarket(q: str, tags: str = None):
+    """
+    Search Polymarket's public API in real-time.
+    
+    Query parameters:
+    - q: Search query (required). E.g. "elección de colombia"
+    - tags: Comma-separated tag slugs to filter by (optional). E.g. "politics,elections"
+    """
+    if not q or not q.strip():
+        raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
+    
+    params: dict = {
+        "search_tags": "true",
+        "q": q.strip(),
+    }
+    
+    if tags:
+        params["events_tag"] = tags.strip()
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(POLYMARKET_API, params=params)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Polymarket API timed out")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=502, detail=f"Polymarket API error: {e.response.status_code}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
+    
+    events = data if isinstance(data, list) else data.get("events", [])
+    
+    return {
+        "success": True,
+        "data": events,
+        "total": len(events),
+        "query": q.strip(),
     }
 
 @app.get("/api/health")
