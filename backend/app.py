@@ -76,27 +76,36 @@ async def root():
 @app.get("/api/events")
 async def get_all_events(tag: str = None, skip: int = 0, limit: int = 100):
     """
-    Get all events, optionally filtered by tag
+    Get all OPEN events, optionally filtered by tag.
     
     Query parameters:
     - tag: Filter events by tag slug (optional)
     - skip: Number of events to skip (default: 0)
     - limit: Maximum number of events to return (default: 100)
     """
+    from datetime import datetime
+    
     events = get_cached_events()
+    today = datetime.now().date()
+    
+    # Filter only open events (endDate >= today)
+    open_events = [
+        e for e in events
+        if e.get('endDate') and datetime.fromisoformat(e['endDate'].replace('Z', '+00:00')).date() >= today
+    ]
     
     # Filter by tag if provided
     if tag:
         filtered_events = []
-        for event in events:
+        for event in open_events:
             event_tags = [t.get('slug', '') for t in event.get('tags', [])]
             if tag in event_tags:
                 filtered_events.append(event)
-        events = filtered_events
+        open_events = filtered_events
     
     # Pagination
-    total = len(events)
-    paginated_events = events[skip:skip + limit]
+    total = len(open_events)
+    paginated_events = open_events[skip:skip + limit]
     
     return {
         "success": True,

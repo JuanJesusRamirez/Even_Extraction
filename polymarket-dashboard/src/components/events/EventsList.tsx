@@ -88,6 +88,15 @@ export default function EventsList() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const apiUrl = API_BASE_URL || 'http://localhost:8000';
 
+  // Filter out closed events (endDate in the past)
+  const isEventOpen = (event: BackendEvent): boolean => {
+    if (!event.endDate) return true;
+    const endDate = new Date(event.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return endDate >= today;
+  };
+
   const extractTags = (data: BackendEvent[]) => {
     const tagSet = new Map<string, string>();
     data.forEach((event) => {
@@ -104,7 +113,7 @@ export default function EventsList() {
       const response = await fetch(`${apiUrl}/api/events`);
       if (!response.ok) throw new Error('Failed to fetch events');
       const result = await response.json();
-      const data: BackendEvent[] = result.data || [];
+      const data: BackendEvent[] = (result.data || []).filter(isEventOpen);
       setEvents(data);
       extractTags(data);
       setActiveQuery(null);
@@ -136,7 +145,7 @@ export default function EventsList() {
           throw new Error(errData.detail || `Search failed (${response.status})`);
         }
         const result = await response.json();
-        const data: BackendEvent[] = result.data || [];
+        const data: BackendEvent[] = (result.data || []).filter(isEventOpen);
         setEvents(data);
         extractTags(data);
         setActiveQuery(query.trim());
