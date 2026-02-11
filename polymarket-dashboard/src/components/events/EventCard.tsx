@@ -11,6 +11,8 @@ interface Scenario {
   question: string;
   endDate: string;
   volume: number;
+  price: number;
+  groupItemTitle: string;
 }
 
 interface EventCardProps {
@@ -138,58 +140,61 @@ export default function EventCard({
           </div>
         </div>
 
-        <div className="mt-4 mb-4">
-          <h4 className="font-semibold text-gray-700 mb-3">Probabilidades</h4>
-          <div className="space-y-2">
-            {outcomePrices && Array.isArray(outcomePrices) && outcomePrices.length > 0 ? (
-              outcomePrices.map((item: OutcomePrice, idx: number) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                >
-                  <span className="text-gray-700 text-sm truncate">
-                    {item.outcome || `Outcome ${idx + 1}`}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{
-                          width: `${Math.max(0, Math.min(100, (item.price || 0) * 100))}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-blue-600 font-semibold text-sm w-12 text-right">
-                      {((item.price || 0) * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-sm">No hay datos disponibles</p>
-            )}
-          </div>
-        </div>
-
         {scenarios && scenarios.length > 0 && (
           <div className="mt-4 pt-4 border-t">
-            <h4 className="font-semibold text-gray-700 mb-3">Escenarios Activos ({scenarios.length})</h4>
-            <div className="space-y-2">
-              {scenarios.map((scenario, idx) => (
-                <div key={idx} className="bg-gray-50 p-2 rounded text-sm">
-                  <p className="text-gray-900 font-medium truncate">
-                    {scenario.question}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <p className="text-gray-600 text-xs">
-                      Cierre: {formatDate(scenario.endDate)}
-                    </p>
-                    <p className="text-gray-600 text-xs">
-                      Vol: ${formatNumber(parseFloat(scenario.volume as any))}
-                    </p>
+            <h4 className="font-semibold text-gray-700 mb-3">Escenarios ({scenarios.length})</h4>
+            <div className="space-y-3">
+              {scenarios.map((scenario, idx) => {
+                const pct = Math.max(0, Math.min(100, (scenario.price || 0) * 100));
+                const barColor = pct >= 60 ? 'bg-green-500' : pct >= 30 ? 'bg-yellow-500' : 'bg-red-400';
+                return (
+                  <div key={idx} className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-gray-900 font-semibold text-sm">
+                        {scenario.groupItemTitle}
+                      </span>
+                      <span className={`font-bold text-sm ${
+                        pct >= 60 ? 'text-green-600' : pct >= 30 ? 'text-yellow-600' : 'text-red-500'
+                      }`}>
+                        {pct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                      <div
+                        className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
+                        style={{ width: `${pct}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <p>Cierre: {formatDate(scenario.endDate)}</p>
+                      <p>Vol: ${formatNumber(scenario.volume)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {(!scenarios || scenarios.length === 0) && (
+          <div className="mt-4 pt-4 border-t">
+            <h4 className="font-semibold text-gray-700 mb-3">Probabilidades</h4>
+            <div className="space-y-2">
+              {outcomePrices && Array.isArray(outcomePrices) && outcomePrices.length > 0 ? (
+                outcomePrices.map((item: OutcomePrice, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span className="text-gray-700 text-sm truncate">{item.outcome || `Outcome ${idx + 1}`}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.max(0, Math.min(100, (item.price || 0) * 100))}%` }}></div>
+                      </div>
+                      <span className="text-blue-600 font-semibold text-sm w-12 text-right">{((item.price || 0) * 100).toFixed(1)}%</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-sm">No hay datos disponibles</p>
+              )}
             </div>
           </div>
         )}

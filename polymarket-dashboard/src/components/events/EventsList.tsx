@@ -45,11 +45,17 @@ function transformEvent(event: BackendEvent) {
     }) || [];
 
   const scenarios =
-    event.markets?.map((market) => ({
-      question: market.question,
-      endDate: market.endDate,
-      volume: parseFloat(market.volume || '0'),
-    })) || [];
+    event.markets?.map((market) => {
+      const prices = JSON.parse(market.outcomePrices || '[]');
+      const yesPrice = parseFloat(prices[0] || '0');
+      return {
+        question: market.question,
+        endDate: market.endDate,
+        volume: parseFloat(market.volume || '0'),
+        price: yesPrice,
+        groupItemTitle: market.groupItemTitle || market.question || 'Unknown',
+      };
+    }) || [];
 
   return {
     id: event.id,
