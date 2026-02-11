@@ -151,13 +151,13 @@ async def get_all_tags():
 POLYMARKET_API = "https://gamma-api.polymarket.com/public-search"
 
 @app.get("/api/search")
-async def search_polymarket(q: str, tags: str = None):
+async def search_polymarket(q: str, events_tag: str = None):
     """
     Search Polymarket's public API in real-time.
     
     Query parameters:
     - q: Search query (required). E.g. "elección de colombia"
-    - tags: Comma-separated tag slugs to filter by (optional). E.g. "politics,elections"
+    - events_tag: Tag to filter by (optional). E.g. "politics" or "elections"
     """
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
@@ -167,8 +167,8 @@ async def search_polymarket(q: str, tags: str = None):
         "q": q.strip(),
     }
     
-    if tags:
-        params["events_tag"] = tags.strip()
+    if events_tag:
+        params["events_tag"] = events_tag.strip()
     
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -189,6 +189,7 @@ async def search_polymarket(q: str, tags: str = None):
         "data": events,
         "total": len(events),
         "query": q.strip(),
+        "tag": events_tag.strip() if events_tag else None,
     }
 
 @app.get("/api/health")

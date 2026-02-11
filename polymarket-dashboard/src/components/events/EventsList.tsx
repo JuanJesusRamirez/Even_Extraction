@@ -129,7 +129,7 @@ export default function EventsList() {
 
   // Live search on Polymarket API via backend
   const searchPolymarket = useCallback(
-    async (query: string) => {
+    async (query: string, tagToSearch?: string) => {
       if (!query.trim()) {
         fetchSavedEvents();
         return;
@@ -139,6 +139,13 @@ export default function EventsList() {
         setSearching(true);
         setError(null);
         const params = new URLSearchParams({ q: query.trim() });
+        
+        // Add tag if provided or if a single tag is selected
+        const tag = tagToSearch || (selectedTags.length === 1 ? selectedTags[0] : '');
+        if (tag) {
+          params.append('events_tag', tag);
+        }
+        
         const response = await fetch(`${apiUrl}/api/search?${params}`);
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
@@ -159,7 +166,7 @@ export default function EventsList() {
         setSearching(false);
       }
     },
-    [apiUrl, fetchSavedEvents]
+    [apiUrl, fetchSavedEvents, selectedTags]
   );
 
   // Load saved events on mount

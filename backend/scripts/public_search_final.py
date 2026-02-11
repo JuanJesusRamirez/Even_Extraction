@@ -2,10 +2,10 @@ import requests
 import json
 from urllib.parse import urlencode
 
-query = "colombia"
+query = "politics"
 search_tags = "true"
 #events_tag = [ "politics","geopolitics", "elections", "economy", "economy-policy","Global-Rates"]  # Lista de tags
-events_tag ="Global-Rates"
+events_tag = "politics"
 params = {
     "search_tags": search_tags,
     "q": query,
@@ -22,4 +22,4 @@ data = response.json()
 with open("backend_results.json", "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
 
-print("Guardado en test.json")
+print("Guardado en backend_results.json")
