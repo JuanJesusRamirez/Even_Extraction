@@ -2,10 +2,10 @@ import requests
 import json
 from urllib.parse import urlencode
 
-query = "russia"
+query = "colombia"
 search_tags = "true"
-#events_tag = ["elections", "politics","geopolitics", "world", "global-elections"]  # Lista de tags
-events_tag ="world"
+#events_tag = [ "politics","geopolitics", "elections", "economy", "economy-policy","Global-Rates"]  # Lista de tags
+events_tag ="Global-Rates"
 params = {
     "search_tags": search_tags,
     "q": query,
