@@ -19,7 +19,7 @@ url = f"https://gamma-api.polymarket.com/public-search?{query_string}"
 response = requests.get(url)
 data = response.json()
 
-with open("test.json", "w", encoding="utf-8") as f:
+with open("backend_results.json", "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
 
 print("Guardado en test.json")
