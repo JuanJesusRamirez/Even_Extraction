@@ -38,14 +38,16 @@ function formatDate(dateString: string): string {
   });
 }
 
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
+function formatNumber(num: number | string | undefined | null): string {
+  const n = Number(num);
+  if (!Number.isFinite(n)) return '0';
+  if (n >= 1000000) {
+    return (n / 1000000).toFixed(1) + 'M';
   }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+  if (n >= 1000) {
+    return (n / 1000).toFixed(1) + 'K';
   }
-  return num.toFixed(2);
+  return n.toFixed(2);
 }
 
 export default function EventCard({

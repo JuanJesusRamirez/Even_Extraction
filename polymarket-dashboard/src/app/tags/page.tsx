@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/constants/config';
 
 interface Tag {
   slug: string;
-  count: number;
+  label: string;
 }
 
 export default function TagsPage() {
@@ -16,12 +17,13 @@ export default function TagsPage() {
     const fetchTags = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/available-tags');
+        const apiUrl = API_BASE_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/api/tags`);
         if (!response.ok) {
           throw new Error('Failed to fetch tags');
         }
         const data = await response.json();
-        setTags(data.tags);
+        setTags(data.data || []);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -66,8 +68,8 @@ export default function TagsPage() {
                   key={tag.slug}
                   className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow border-l-4 border-indigo-500"
                 >
-                  <p className="font-semibold text-gray-900 break-all">{tag.slug}</p>
-                  <p className="text-sm text-gray-600 mt-1">📊 {tag.count} events</p>
+                  <p className="font-semibold text-gray-900 break-all">{tag.label}</p>
+                  <p className="text-sm text-gray-500 mt-1">{tag.slug}</p>
                 </div>
               ))}
             </div>
