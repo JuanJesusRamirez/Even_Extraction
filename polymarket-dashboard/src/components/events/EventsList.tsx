@@ -5,6 +5,9 @@ import EventCard from '@/components/events/EventCard';
 import TagFilter from '@/components/filters/TagFilter';
 import { API_BASE_URL } from '@/constants/config';
 
+// Tags permitidos que se mostrarán en la UI
+const ALLOWED_TAGS = ["politics", "geopolitics", "elections", "economy", "economy-policy", "Global-Rates"];
+
 interface Market {
   id: string;
   question: string;
@@ -47,13 +50,19 @@ function transformEvent(event: BackendEvent) {
   const scenarios =
     event.markets?.map((market) => {
       const prices = JSON.parse(market.outcomePrices || '[]');
-      const yesPrice = parseFloat(prices[0] || '0');
+      const outcomes = JSON.parse(market.outcomes || '[]');
+      const groupTitle = market.groupItemTitle || market.question || 'Unknown';
+      
+      // Crear un scenario con todos los outcomes
       return {
         question: market.question,
         endDate: market.endDate,
         volume: parseFloat(market.volume || '0'),
-        price: yesPrice,
-        groupItemTitle: market.groupItemTitle || market.question || 'Unknown',
+        groupItemTitle: groupTitle,
+        outcomes: (outcomes as string[]).map((outcome, idx) => ({
+          name: outcome,
+          price: parseFloat(prices[idx] || '0'),
+        })),
       };
     }) || [];
 
@@ -100,9 +109,18 @@ export default function EventsList() {
   const extractTags = (data: BackendEvent[]) => {
     const tagSet = new Map<string, string>();
     data.forEach((event) => {
-      event.tags?.forEach((tag) => tagSet.set(tag.slug, tag.label));
+      event.tags?.forEach((tag) => {
+        // Solo incluir tags que estén en la lista permitida
+        if (ALLOWED_TAGS.includes(tag.slug)) {
+          tagSet.set(tag.slug, tag.label);
+        }
+      });
     });
-    setAllTags(Array.from(tagSet, ([slug, label]) => ({ slug, label })));
+    // Ordenar los tags según el orden en ALLOWED_TAGS
+    const sortedTags = Array.from(tagSet, ([slug, label]) => ({ slug, label })).sort(
+      (a, b) => ALLOWED_TAGS.indexOf(a.slug) - ALLOWED_TAGS.indexOf(b.slug)
+    );
+    setAllTags(sortedTags);
   };
 
   // Load saved events from backend (default view)
@@ -140,10 +158,9 @@ export default function EventsList() {
         setError(null);
         const params = new URLSearchParams({ q: query.trim() });
         
-        // Add tag if provided or if a single tag is selected
-        const tag = tagToSearch || (selectedTags.length === 1 ? selectedTags[0] : '');
-        if (tag) {
-          params.append('events_tag', tag);
+        // Usar el tag que se pasa explícitamente
+        if (tagToSearch) {
+          params.append('events_tag', tagToSearch);
         }
         
         const response = await fetch(`${apiUrl}/api/search?${params}`);
@@ -166,7 +183,7 @@ export default function EventsList() {
         setSearching(false);
       }
     },
-    [apiUrl, fetchSavedEvents, selectedTags]
+    [apiUrl, fetchSavedEvents]
   );
 
   // Load saved events on mount
@@ -176,7 +193,9 @@ export default function EventsList() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    searchPolymarket(searchQuery);
+    // Pasar el tag seleccionado explícitamente a la búsqueda
+    const tagToUse = selectedTags.length > 0 ? selectedTags[0] : undefined;
+    searchPolymarket(searchQuery, tagToUse);
   };
 
   const handleClearSearch = () => {
@@ -256,6 +275,52 @@ export default function EventsList() {
             >
               Limpiar y volver a eventos guardados
             </button>
+          </div>
+        )}
+
+        {/* Debug Query String Panel */}
+        {(activeQuery || selectedTags.length > 0) && (
+          <div className="mt-4 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+            <div className="text-xs text-gray-700 font-mono">
+              <p className="font-bold mb-2 text-gray-900">Query String:</p>
+              <div className="space-y-2">
+                <p>
+                  <span className="font-bold">Endpoint:</span> <span className="text-blue-600">{apiUrl}/api/search</span>
+                </p>
+                <p>
+                  <span className="font-bold">Parámetros:</span>
+                </p>
+                <ul className="ml-4 space-y-1">
+                  {activeQuery && (
+                    <li>
+                      <span className="text-gray-600">q = </span>
+                      <span className="text-green-700 font-semibold">&quot;{activeQuery}&quot;</span>
+                    </li>
+                  )}
+                  {selectedTags.length > 0 && (
+                    <li>
+                      <span className="text-gray-600">events_tag = </span>
+                      <span className="text-green-700 font-semibold">&quot;{selectedTags[0]}&quot;</span>
+                    </li>
+                  )}
+                  {selectedTags.length > 1 && (
+                    <li className="text-orange-600">
+                      ⚠️ Solo se usa el primer tag: <strong>{selectedTags[0]}</strong>
+                    </li>
+                  )}
+                </ul>
+                <p className="border-t border-gray-300 pt-2 mt-2">
+                  <span className="font-bold">URL Completo:</span>
+                  <br />
+                  <span className="text-blue-600 break-all">
+                    {apiUrl}/api/search?
+                    {activeQuery && `q=${encodeURIComponent(activeQuery)}`}
+                    {activeQuery && selectedTags.length > 0 && '&'}
+                    {selectedTags.length > 0 && `events_tag=${selectedTags[0]}`}
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

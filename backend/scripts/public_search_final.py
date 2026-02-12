@@ -2,7 +2,7 @@ import requests
 import json
 from urllib.parse import urlencode
 
-query = "politics"
+query = "colombia"
 search_tags = "true"
 #events_tag = [ "politics","geopolitics", "elections", "economy", "economy-policy","Global-Rates"]  # Lista de tags
 events_tag = "politics"

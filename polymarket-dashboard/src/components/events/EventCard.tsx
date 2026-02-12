@@ -11,8 +11,11 @@ interface Scenario {
   question: string;
   endDate: string;
   volume: number;
-  price: number;
   groupItemTitle: string;
+  outcomes: Array<{
+    name: string;
+    price: number;
+  }>;
 }
 
 interface EventCardProps {
@@ -144,34 +147,40 @@ export default function EventCard({
           <div className="mt-4 pt-4 border-t">
             <h4 className="font-semibold text-gray-700 mb-3">Escenarios ({scenarios.length})</h4>
             <div className="space-y-3">
-              {scenarios.map((scenario, idx) => {
-                const pct = Math.max(0, Math.min(100, (scenario.price || 0) * 100));
-                const barColor = pct >= 60 ? 'bg-green-500' : pct >= 30 ? 'bg-yellow-500' : 'bg-red-400';
-                return (
-                  <div key={idx} className="bg-gray-50 p-3 rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-gray-900 font-semibold text-sm">
-                        {scenario.groupItemTitle}
-                      </span>
-                      <span className={`font-bold text-sm ${
-                        pct >= 60 ? 'text-green-600' : pct >= 30 ? 'text-yellow-600' : 'text-red-500'
-                      }`}>
-                        {pct.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                      <div
-                        className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
-                        style={{ width: `${pct}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <p>Cierre: {formatDate(scenario.endDate)}</p>
-                      <p>Vol: ${formatNumber(scenario.volume)}</p>
-                    </div>
+              {scenarios.map((scenario, idx) => (
+                <div key={idx} className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-gray-600 text-xs mb-3 line-clamp-2">{scenario.question}</p>
+                  <h5 className="text-gray-900 font-semibold text-sm mb-3">{scenario.groupItemTitle}</h5>
+                  <div className="space-y-2">
+                    {scenario.outcomes.map((outcome, outIdx) => {
+                      const pct = Math.max(0, Math.min(100, (outcome.price || 0) * 100));
+                      const barColor = pct >= 60 ? 'bg-green-500' : pct >= 30 ? 'bg-yellow-500' : 'bg-red-400';
+                      return (
+                        <div key={outIdx}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-gray-700 text-sm">{outcome.name}</span>
+                            <span className={`font-bold text-sm ${
+                              pct >= 60 ? 'text-green-600' : pct >= 30 ? 'text-yellow-600' : 'text-red-500'
+                            }`}>
+                              {pct.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`${barColor} h-2 rounded-full transition-all duration-500`}
+                              style={{ width: `${pct}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                  <div className="flex justify-between items-center text-xs text-gray-500 mt-3">
+                    <p>Cierre: {formatDate(scenario.endDate)}</p>
+                    <p>Vol: ${formatNumber(scenario.volume)}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
